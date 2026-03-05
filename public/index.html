@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+    <meta name="theme-color" content="#060810" />
+    <meta name="description" content="Shoot Out Snooker — Elite Referee Assistant" />
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+    <title>Shoot Out Snooker</title>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+      html, body, #root {
+        height: 100%;
+        background: #060810;
+        font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        overflow-x: hidden;
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar { width: 4px; }
+      ::-webkit-scrollbar-track { background: rgba(255,255,255,0.02); }
+      ::-webkit-scrollbar-thumb { background: rgba(0,212,255,0.3); border-radius: 2px; }
+
+      /* Keyframe animations */
+      @keyframes pulseRed {
+        0%   { text-shadow: 0 0 10px rgba(255,45,85,0.6); }
+        100% { text-shadow: 0 0 24px rgba(255,45,85,1), 0 0 48px rgba(255,45,85,0.4); }
+      }
+      @keyframes pulseAmber {
+        0%   { text-shadow: 0 0 10px rgba(255,171,0,0.6); }
+        100% { text-shadow: 0 0 24px rgba(255,171,0,1), 0 0 48px rgba(255,171,0,0.4); }
+      }
+      @keyframes glowCyan {
+        0%   { box-shadow: 0 0 10px rgba(0,212,255,0.2), inset 0 0 10px rgba(0,212,255,0.02); }
+        100% { box-shadow: 0 0 24px rgba(0,212,255,0.45), inset 0 0 20px rgba(0,212,255,0.06); }
+      }
+      @keyframes slideDown {
+        from { transform: translateY(-100%); opacity: 0; }
+        to   { transform: translateY(0);    opacity: 1; }
+      }
+      @keyframes fadeInUp {
+        from { transform: translateY(20px); opacity: 0; }
+        to   { transform: translateY(0);    opacity: 1; }
+      }
+      @keyframes scanline {
+        0%   { transform: translateY(-100%); }
+        100% { transform: translateY(100vh); }
+      }
+      @keyframes bgPulse {
+        0%, 100% { opacity: 0.4; }
+        50%       { opacity: 0.6; }
+      }
+      @keyframes rimLight {
+        0%, 100% { box-shadow: 0 0 0 1px rgba(0,212,255,0.3), 0 8px 32px rgba(0,0,0,0.5); }
+        50%       { box-shadow: 0 0 0 1px rgba(0,212,255,0.7), 0 8px 48px rgba(0,212,255,0.15); }
+      }
+      @keyframes scoreCount {
+        0%   { transform: translateY(-8px); opacity: 0; }
+        100% { transform: translateY(0);    opacity: 1; }
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>
