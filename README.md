@@ -3,7 +3,6 @@
 [![Vercel](https://img.shields.io/badge/Deployed%20on-Vercel-black?style=for-the-badge&logo=vercel&logoColor=white)](https://shoot-out-snooker.vercel.app)
 [![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
 [![Framer Motion](https://img.shields.io/badge/Framer%20Motion-12-0055FF?style=for-the-badge&logo=framer&logoColor=white)](https://www.framer.com/motion/)
-[![License](https://img.shields.io/badge/License-Non--Commercial-00d4ff?style=for-the-badge)](./README.md)
 [![Volunteering](https://img.shields.io/badge/FFBillard-Volunteering-00ff88?style=for-the-badge)](https://www.ffbillard.fr)
 
 > A professional, real-time referee tool for the **Shoot Out** snooker format, built as part of a volunteering initiative with **FFBillard** club.
@@ -17,6 +16,7 @@
 This application was designed and developed as a volunteer contribution to support the **FFBillard** club in organizing and refereeing Shoot Out snooker tournaments. It replaces manual scorekeeping with a precise, real-time digital assistant that enforces official Shoot Out rules automatically, allowing referees to focus entirely on the game.
 
 **Author:** Anas TAGUI
+
 **Context:** Volunteering work with FFBillard Club
 
 ## What is Shoot Out Snooker?
