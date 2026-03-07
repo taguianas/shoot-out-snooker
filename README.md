@@ -48,16 +48,24 @@ Shoot Out is a fast-paced, single-frame snooker format played under strict time 
 - Match ends automatically when the clock reaches zero
 
 ### Professional Toolkit
-- **Foul System:** Select from a list of official foul types; penalty points calculated automatically (minimum 4, or the value of the ball on if higher during the final sequence)
+- **Foul System:** Select from a list of official foul types; penalty calculated automatically (min 4 pts). Selecting "Hit Color (not Red)" opens a ball picker — tap the color that was struck and the exact penalty (e.g. +6 for Pink, +7 for Black) is applied instantly
 - **Miss / Pass:** Switches play to the opponent and resets the shot clock
-- **Undo:** Fully reversible last action, correctly unwinding score, ball state, and phase transitions
-- **Pause / Resume:** Freezes both clocks without losing any state
+- **Switch Player:** Manually transfers play to the other player, resets and auto-resumes the 15-second shot clock
+- **Pause / Resume:** Freezes only the shot clock — the 10-minute match timer always keeps running and can only be reset via Restart
+
+### Match Log
+- Collapsible in-game history panel listing every pot, foul, and miss with player names and point values
+- Individual entries can be deleted with a single tap, or the entire log cleared at once
 
 ### Match Statistics
 - End-of-match overlay with winner announcement, final scores, pot count, foul count, and top run for each player
 
+### Light & Dark Mode
+- Toggle between a deep-black glassmorphism dark theme and a clean light theme using the sun/moon button in the header
+- Light mode is the default; all accent colors, borders, and backgrounds adapt automatically
+
 ### Elite UI
-- Deep black glassmorphism interface with `backdrop-filter` frosted panels
+- Glassmorphism panels with `backdrop-filter` frosted glass effect
 - 3D snooker balls rendered with multi-stop radial gradients and specular highlights
 - Animated phase indicator (dots) during the final color sequence
 - Fully responsive, optimized for phone and tablet use at the table
@@ -107,10 +115,12 @@ Outputs a production-ready bundle to the `build/` folder, ready to be served fro
 
 1. **Setup:** Enter both player names on the start screen, then tap **Begin Match**
 2. **Scoring:** Tap a lit ball to register a pot; the shot clock resets automatically
-3. **Fouls:** Tap **Foul** to open the declaration panel; the opponent receives the penalty points
+3. **Fouls:** Tap **Foul** → choose the foul type; for "Hit Color (not Red)" pick the exact ball struck to set the correct penalty
 4. **Miss:** Tap **Miss** to pass play to the opponent without scoring
-5. **Undo:** Tap **Undo** to reverse the last recorded action
-6. **Pause / Resume:** Use the controls at the bottom to freeze and resume both clocks
+5. **Switch:** Tap **Switch** to manually transfer play; the shot clock restarts and resumes immediately
+6. **Pause / Resume:** Freezes only the shot clock — the 10-minute timer is unaffected
+7. **Match Log:** Tap **Match Log** in the controls row to view, delete, or clear the action history
+8. **Theme:** Tap the sun/moon icon in the header to toggle between light and dark mode
 
 ## Project Structure
 

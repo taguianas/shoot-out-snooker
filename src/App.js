@@ -5,7 +5,7 @@ import AudioManager from './AudioManager';
 // ═══════════════════════════════════════════════════════════════
 //  DESIGN TOKENS
 // ═══════════════════════════════════════════════════════════════
-const T = {
+const DARK_T = {
   cyan:        '#00d4ff',
   green:       '#00ff88',
   red:         '#ff2d55',
@@ -23,7 +23,42 @@ const T = {
   text1:       '#e8eaed',
   text2:       '#8b949e',
   text3:       'rgba(255,255,255,0.3)',
+  headerBg:    'rgba(6,8,16,0.8)',
+  modalBg:     'rgba(8,10,20,0.98)',
+  track:       'rgba(255,255,255,0.05)',
+  clockPaused: '#3a4060',
+  dotDone:     'rgba(255,255,255,0.15)',
+  dotFuture:   'rgba(255,255,255,0.05)',
 };
+
+const LIGHT_T = {
+  cyan:        '#0088bb',
+  green:       '#007744',
+  red:         '#cc2244',
+  amber:       '#bb7700',
+  purple:      '#7733bb',
+  bg0:         '#f0f4f8',
+  bg1:         '#e8edf3',
+  glass1:      'rgba(0,0,0,0.04)',
+  glass2:      'rgba(0,0,0,0.08)',
+  border:      'rgba(0,0,0,0.1)',
+  borderCyan:  'rgba(0,136,187,0.4)',
+  borderRed:   'rgba(204,34,68,0.4)',
+  borderAmber: 'rgba(187,119,0,0.4)',
+  borderGreen: 'rgba(0,119,68,0.4)',
+  text1:       '#1a202c',
+  text2:       '#4a5568',
+  text3:       'rgba(0,0,0,0.4)',
+  headerBg:    'rgba(240,244,248,0.95)',
+  modalBg:     'rgba(240,244,248,0.99)',
+  track:       'rgba(0,0,0,0.08)',
+  clockPaused: '#a0b0c8',
+  dotDone:     'rgba(0,0,0,0.15)',
+  dotFuture:   'rgba(0,0,0,0.06)',
+};
+
+const ThemeContext = React.createContext(DARK_T);
+const useTheme = () => React.useContext(ThemeContext);
 
 // ═══════════════════════════════════════════════════════════════
 //  GAME CONSTANTS
@@ -51,10 +86,11 @@ const BALL_GRADIENTS = {
 const FINAL_COLORS = ['YELLOW', 'GREEN', 'BROWN', 'BLUE', 'PINK', 'BLACK'];
 
 const FOUL_TYPES = [
-  { id: 'timeout',   label: 'Shot Clock Expired', icon: '⏱' },
-  { id: 'cueball',   label: 'Cue Ball Potted',    icon: '○' },
-  { id: 'wrongball', label: 'Wrong Ball Played',  icon: '✕' },
-  { id: 'other',     label: 'Other Foul',         icon: '!' },
+  { id: 'timeout',   label: 'Shot Clock Expired',    icon: '⏱' },
+  { id: 'cueball',   label: 'Cue Ball Potted',        icon: '○' },
+  { id: 'hitcolor',  label: 'Hit Color (not Red)',    icon: '🎱', pickBall: true },
+  { id: 'wrongball', label: 'Other Wrong Ball',       icon: '✕' },
+  { id: 'other',     label: 'Other Foul',             icon: '!' },
 ];
 
 // ═══════════════════════════════════════════════════════════════
@@ -72,6 +108,9 @@ const Icon = ({ name, size = 18, color = 'currentColor' }) => {
     close:  <><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></>,
     alert:  <><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></>,
     chevron:<polyline points="6 9 12 15 18 9"/>,
+    sun:    <><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></>,
+    moon:   <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>,
+    swap:   <><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></>,
   };
   return (
     <svg xmlns="http://www.w3.org/2000/svg" width={size} height={size} viewBox="0 0 24 24"
@@ -85,13 +124,14 @@ const Icon = ({ name, size = 18, color = 'currentColor' }) => {
 //  SHOT CLOCK
 // ═══════════════════════════════════════════════════════════════
 const ShotClock = ({ timeLeft, totalTime, isPaused }) => {
+  const T = useTheme();
   const r = 54;
   const circ = 2 * Math.PI * r;
   const pct = totalTime > 0 ? Math.max(0, timeLeft / totalTime) : 0;
   const offset = circ * (1 - pct);
   const isCritical = timeLeft <= 5 && timeLeft > 0 && !isPaused;
   const isUrgent   = timeLeft <= 10 && timeLeft > 5 && !isPaused;
-  const strokeColor = isPaused ? '#3a4060' : isCritical ? T.red : isUrgent ? T.amber : T.cyan;
+  const strokeColor = isPaused ? T.clockPaused : isCritical ? T.red : isUrgent ? T.amber : T.cyan;
   const glowColor   = isCritical ? 'rgba(255,45,85,0.9)'  : isUrgent ? 'rgba(255,171,0,0.9)' : 'rgba(0,212,255,0.8)';
   const numColor    = isPaused ? T.text3 : isCritical ? T.red : isUrgent ? T.amber : T.text1;
   const numAnim     = isCritical ? 'pulseRed 0.45s ease-in-out infinite alternate' : isUrgent ? 'pulseAmber 0.6s ease-in-out infinite alternate' : 'none';
@@ -112,7 +152,7 @@ const ShotClock = ({ timeLeft, totalTime, isPaused }) => {
       {/* SVG ring */}
       <svg width="148" height="148" viewBox="0 0 120 120" style={{ transform: 'rotate(-90deg)', display: 'block' }}>
         {/* Track */}
-        <circle cx="60" cy="60" r={r} fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="6" />
+        <circle cx="60" cy="60" r={r} fill="none" stroke={T.track} strokeWidth="6" />
         {/* Fill */}
         <circle
           cx="60" cy="60" r={r} fill="none"
@@ -245,27 +285,31 @@ const SnookerBall = ({ ballKey, onClick, disabled, size = 64 }) => {
 // ═══════════════════════════════════════════════════════════════
 //  GLASS PANEL
 // ═══════════════════════════════════════════════════════════════
-const GlassPanel = ({ children, style, glowColor, active }) => (
-  <div style={{
-    background: T.glass1,
-    backdropFilter: 'blur(28px) saturate(200%)',
-    WebkitBackdropFilter: 'blur(28px) saturate(200%)',
-    border: `1px solid ${active && glowColor ? glowColor : T.border}`,
-    borderRadius: 18,
-    boxShadow: active && glowColor
-      ? `0 0 0 1px ${glowColor}, 0 12px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.07)`
-      : `0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)`,
-    transition: 'border-color 0.4s ease, box-shadow 0.4s ease',
-    ...style,
-  }}>
-    {children}
-  </div>
-);
+const GlassPanel = ({ children, style, glowColor, active }) => {
+  const T = useTheme();
+  return (
+    <div style={{
+      background: T.glass1,
+      backdropFilter: 'blur(28px) saturate(200%)',
+      WebkitBackdropFilter: 'blur(28px) saturate(200%)',
+      border: `1px solid ${active && glowColor ? glowColor : T.border}`,
+      borderRadius: 18,
+      boxShadow: active && glowColor
+        ? `0 0 0 1px ${glowColor}, 0 12px 40px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.07)`
+        : `0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.04)`,
+      transition: 'border-color 0.4s ease, box-shadow 0.4s ease',
+      ...style,
+    }}>
+      {children}
+    </div>
+  );
+};
 
 // ═══════════════════════════════════════════════════════════════
 //  SCORE CARD
 // ═══════════════════════════════════════════════════════════════
 const ScoreCard = ({ player, isActive, index, previousScore }) => {
+  const T = useTheme();
   const name = player.name || `Player ${index + 1}`;
   const scoreChanged = player.score !== previousScore;
 
@@ -347,6 +391,7 @@ const ScoreCard = ({ player, isActive, index, previousScore }) => {
 //  STATUS BADGE
 // ═══════════════════════════════════════════════════════════════
 const StatusBadge = ({ redsRemaining, isNextBallColor, inFinalSequence, nextFinalColorIndex }) => {
+  const T = useTheme();
   let label, color, borderColor;
 
   if (inFinalSequence) {
@@ -404,7 +449,21 @@ const StatusBadge = ({ redsRemaining, isNextBallColor, inFinalSequence, nextFina
 // ═══════════════════════════════════════════════════════════════
 //  FOUL MODAL
 // ═══════════════════════════════════════════════════════════════
-const FoulModal = ({ onSelect, onClose, penaltyPoints }) => (
+const FoulModal = ({ onSelect, onClose, penaltyPoints }) => {
+  const T = useTheme();
+  const [pickingBall, setPickingBall] = useState(false);
+
+  const handleFoulOption = (foul) => {
+    if (foul.pickBall) { setPickingBall(true); return; }
+    onSelect(foul);
+  };
+
+  const handleBallPick = (ballKey) => {
+    const penalty = Math.max(4, BALLS[ballKey].points);
+    onSelect({ id: 'hitcolor', label: `Hit ${BALLS[ballKey].name} (not Red)`, penalty });
+  };
+
+  return (
   <motion.div
     key="foul-modal"
     initial={{ opacity: 0 }}
@@ -424,7 +483,7 @@ const FoulModal = ({ onSelect, onClose, penaltyPoints }) => (
       exit={{ scale: 0.82, y: 50 }}
       transition={{ type: 'spring', damping: 22, stiffness: 320 }}
       style={{
-        background: 'rgba(8,10,20,0.98)',
+        background: T.modalBg,
         border: `1px solid ${T.borderRed}`,
         borderRadius: 22,
         padding: 28,
@@ -435,17 +494,30 @@ const FoulModal = ({ onSelect, onClose, penaltyPoints }) => (
     >
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 22 }}>
+        {pickingBall && (
+          <button
+            onClick={() => setPickingBall(false)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.text3, padding: 4, display: 'flex', alignItems: 'center' }}
+          >
+            <Icon name="chevron" size={16} color={T.text3} />
+          </button>
+        )}
         <div style={{
           width: 32, height: 32, borderRadius: 8,
           background: 'rgba(255,45,85,0.12)',
           border: '1px solid rgba(255,45,85,0.3)',
           display: 'flex', alignItems: 'center', justifyContent: 'center',
+          flexShrink: 0,
         }}>
           <Icon name="alert" size={16} color={T.red} />
         </div>
         <div>
-          <div style={{ fontSize: 14, fontWeight: 800, color: T.text1, letterSpacing: 1 }}>Declare Foul</div>
-          <div style={{ fontSize: 11, color: T.text3, marginTop: 1 }}>Opponent receives +{penaltyPoints} pts</div>
+          <div style={{ fontSize: 14, fontWeight: 800, color: T.text1, letterSpacing: 1 }}>
+            {pickingBall ? 'Which color was hit?' : 'Declare Foul'}
+          </div>
+          <div style={{ fontSize: 11, color: T.text3, marginTop: 1 }}>
+            {pickingBall ? 'Penalty = ball value (min 4)' : `Opponent receives +${penaltyPoints} pts`}
+          </div>
         </div>
         <button
           onClick={onClose}
@@ -459,17 +531,47 @@ const FoulModal = ({ onSelect, onClose, penaltyPoints }) => (
         </button>
       </div>
 
-      {/* Foul options */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {FOUL_TYPES.map(foul => (
-          <FoulOption key={foul.id} foul={foul} onSelect={onSelect} penalty={penaltyPoints} />
-        ))}
-      </div>
+      {pickingBall ? (
+        /* Ball picker grid */
+        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: 4 }}>
+          {['YELLOW', 'GREEN', 'BROWN', 'BLUE', 'PINK', 'BLACK'].map(key => (
+            <button
+              key={key}
+              onClick={() => handleBallPick(key)}
+              style={{
+                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+                background: 'none', border: `1px solid ${T.border}`,
+                borderRadius: 12, padding: '10px 12px', cursor: 'pointer',
+                transition: 'all 0.15s ease',
+              }}
+            >
+              <div style={{
+                width: 40, height: 40, borderRadius: '50%',
+                background: BALL_GRADIENTS[key],
+                boxShadow: `0 4px 12px ${BALLS[key].glow}`,
+              }} />
+              <span style={{ fontSize: 10, fontWeight: 700, color: T.text2 }}>{BALLS[key].name}</span>
+              <span style={{ fontSize: 11, fontWeight: 900, color: T.red, fontFamily: "'Rajdhani', monospace" }}>
+                +{Math.max(4, BALLS[key].points)}
+              </span>
+            </button>
+          ))}
+        </div>
+      ) : (
+        /* Foul type list */
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {FOUL_TYPES.map(foul => (
+            <FoulOption key={foul.id} foul={foul} onSelect={handleFoulOption} penalty={penaltyPoints} />
+          ))}
+        </div>
+      )}
     </motion.div>
   </motion.div>
-);
+  );
+};
 
 const FoulOption = ({ foul, onSelect, penalty }) => {
+  const T = useTheme();
   const [hovered, setHovered] = useState(false);
   return (
     <button
@@ -506,6 +608,7 @@ const FoulOption = ({ foul, onSelect, penalty }) => {
 //  GAME OVER MODAL
 // ═══════════════════════════════════════════════════════════════
 const GameOverModal = ({ players, history, onReset }) => {
+  const T = useTheme();
   const p0 = players[0];
   const p1 = players[1];
   const p0name = p0.name || 'Player 1';
@@ -546,7 +649,7 @@ const GameOverModal = ({ players, history, onReset }) => {
         animate={{ scale: 1, y: 0 }}
         transition={{ type: 'spring', damping: 20, stiffness: 260 }}
         style={{
-          background: 'rgba(6,8,16,0.99)',
+          background: T.modalBg,
           border: `1px solid ${T.borderCyan}`,
           borderRadius: 24,
           padding: 32,
@@ -629,6 +732,7 @@ const GameOverModal = ({ players, history, onReset }) => {
 };
 
 const NewMatchButton = ({ onClick }) => {
+  const T = useTheme();
   const [hovered, setHovered] = useState(false);
   return (
     <button
@@ -660,6 +764,7 @@ const NewMatchButton = ({ onClick }) => {
 //  SETUP SCREEN
 // ═══════════════════════════════════════════════════════════════
 const SetupScreen = ({ players, onNameChange, onStart }) => {
+  const T = useTheme();
   const [focused, setFocused] = useState(null);
   const [btnHovered, setBtnHovered] = useState(false);
 
@@ -792,7 +897,8 @@ const SetupScreen = ({ players, onNameChange, onStart }) => {
 // ═══════════════════════════════════════════════════════════════
 //  CONTROL BUTTON
 // ═══════════════════════════════════════════════════════════════
-const CtrlBtn = ({ icon, label, onClick, color = T.text2, disabled }) => {
+const CtrlBtn = ({ icon, label, onClick, color = DARK_T.text2, disabled }) => {
+  const T = useTheme();
   const [hov, setHov] = useState(false);
   return (
     <button
@@ -820,7 +926,7 @@ const CtrlBtn = ({ icon, label, onClick, color = T.text2, disabled }) => {
   );
 };
 
-const ActionBtn = ({ icon, label, onClick, color = T.red }) => {
+const ActionBtn = ({ icon, label, onClick, color = DARK_T.red }) => {
   const [hov, setHov] = useState(false);
   const [pressed, setPressed] = useState(false);
   return (
@@ -857,6 +963,7 @@ const ActionBtn = ({ icon, label, onClick, color = T.red }) => {
 const formatTime = (s) => `${Math.floor(s / 60)}:${(s % 60).toString().padStart(2, '0')}`;
 
 const MatchTimerDisplay = ({ seconds }) => {
+  const T = useTheme();
   const isLow    = seconds <= 120 && seconds > 60;
   const isCrit   = seconds <= 60;
   const color    = isCrit ? T.red : isLow ? T.amber : T.text2;
@@ -896,6 +1003,11 @@ const GameScreen = () => {
   const [gameOverVisible,    setGameOverVisible]    = useState(false);
   const [showAlertBanner,    setShowAlertBanner]    = useState(false);
   const [hasPlayed5min,      setHasPlayed5min]      = useState(false);
+  const [isDark,             setIsDark]             = useState(false);
+  const [showHistory,        setShowHistory]        = useState(false);
+  const [timerResetKey,      setTimerResetKey]      = useState(0);
+
+  const T = isDark ? DARK_T : LIGHT_T;
 
   const isProcessing = useRef(false);
   const handleFoulRef = useRef(null);
@@ -930,8 +1042,8 @@ const GameScreen = () => {
     isProcessing.current = true;
 
     const opponentIdx = (currentPlayerIndex + 1) % 2;
-    let penalty = 4;
-    if (inFinalSequence) {
+    let penalty = foulType.penalty != null ? foulType.penalty : 4;
+    if (foulType.penalty == null && inFinalSequence) {
       const key = FINAL_COLORS[nextFinalColorIdx];
       if (key) penalty = Math.max(4, BALLS[key].points);
     }
@@ -952,7 +1064,7 @@ const GameScreen = () => {
 
   // ─── Match timer ─────────────────────────────────────────────
   useEffect(() => {
-    if (!isGameActive || isPaused || matchTimer <= 0) return;
+    if (!isGameActive || matchTimer <= 0) return;
     const id = setInterval(() => {
       setMatchTimer(prev => {
         const next = prev - 1;
@@ -975,7 +1087,7 @@ const GameScreen = () => {
     }, 1000);
     return () => clearInterval(id);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isGameActive, isPaused, matchTimer, hasPlayed5min]);
+  }, [isGameActive, matchTimer, hasPlayed5min]);
 
   // ─── Shot timer (one-tick-at-a-time pattern) ─────────────────
   useEffect(() => {
@@ -988,7 +1100,9 @@ const GameScreen = () => {
       });
     }, 1000);
     return () => clearTimeout(id);
-  }, [isGameActive, isPaused, shotTimer]);
+  // timerResetKey forces a restart even when shotTimer hasn't changed value
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isGameActive, isPaused, shotTimer, timerResetKey]);
 
   // Handle shot timer expiry
   useEffect(() => {
@@ -1091,53 +1205,13 @@ const GameScreen = () => {
     setTimeout(() => { isProcessing.current = false; }, 150);
   }, [currentPlayerIndex, inFinalSequence, addHistory, switchPlayer]);
 
-  // ─── Undo ────────────────────────────────────────────────────
-  const undoLastAction = useCallback(() => {
-    if (history.length === 0) return;
-    const last = history[0];
-    const rest = history.slice(1);
-
-    if (last.action === 'pot') {
-      setPlayers(prev => prev.map((p, i) =>
-        i === last.player ? { ...p, score: p.score - last.points } : p
-      ));
-      if (last.ball === 'Red') {
-        setRedsRemaining(prev => prev + 1);
-        setIsNextBallColor(false);
-        setInFinalSequence(false);
-      } else {
-        // Was a color pot
-        if (inFinalSequence) {
-          if (nextFinalColorIdx === 0) {
-            // Undo the free-choice color (go back before final sequence)
-            setInFinalSequence(false);
-            setIsNextBallColor(true);
-            setRedsRemaining(0);
-          } else {
-            setNextFinalColorIdx(prev => prev - 1);
-          }
-        } else if (redsRemaining === 0 && !isNextBallColor) {
-          // This was the free-choice color after last red
-          setInFinalSequence(false);
-          setIsNextBallColor(true);
-        } else {
-          setIsNextBallColor(true);
-        }
-      }
-    } else if (last.action === 'foul') {
-      const oppIdx = (last.player + 1) % 2;
-      setPlayers(prev => prev.map((p, i) =>
-        i === oppIdx ? { ...p, score: p.score - last.points } : p
-      ));
-      setCurrentPlayerIndex(last.player);
-      setShotTimer(shotTimeLimit);
-    } else if (last.action === 'miss') {
-      setCurrentPlayerIndex(last.player);
-      setShotTimer(shotTimeLimit);
-    }
-
-    setHistory(rest);
-  }, [history, inFinalSequence, isNextBallColor, nextFinalColorIdx, redsRemaining, shotTimeLimit]);
+  // ─── Switch player ───────────────────────────────────────────
+  const handleSwitchPlayer = useCallback(() => {
+    setCurrentPlayerIndex(prev => (prev + 1) % 2);
+    setShotTimer(shotTimeLimit);
+    setTimerResetKey(k => k + 1);
+    setIsPaused(false);
+  }, [shotTimeLimit]);
 
   // ─── Game lifecycle ──────────────────────────────────────────
   const startGame = () => {
@@ -1195,6 +1269,7 @@ const GameScreen = () => {
 
   // ─── Render ──────────────────────────────────────────────────
   return (
+    <ThemeContext.Provider value={T}>
     <div style={{
       minHeight: '100vh', height: '100%',
       background: T.bg0,
@@ -1266,7 +1341,7 @@ const GameScreen = () => {
         padding: '16px 20px 12px',
         borderBottom: `1px solid ${T.border}`,
         backdropFilter: 'blur(20px)',
-        background: 'rgba(6,8,16,0.8)',
+        background: T.headerBg,
         flexShrink: 0,
       }}>
         <div style={{ flex: 1 }}>
@@ -1286,24 +1361,37 @@ const GameScreen = () => {
           <MatchTimerDisplay seconds={matchTimer} />
         )}
 
-        {isGameActive && (
-          <div style={{
-            flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center',
-            gap: 6,
-          }}>
-            <div style={{
-              fontSize: 9, letterSpacing: 2, color: T.text3, textTransform: 'uppercase', fontWeight: 700,
-            }}>
-              REDS
-            </div>
-            <div style={{
-              fontFamily: "'Rajdhani', monospace",
-              fontSize: 18, fontWeight: 900, color: inFinalSequence ? T.amber : redsRemaining === 0 ? T.amber : T.text2,
-            }}>
-              {inFinalSequence ? 'FINAL' : redsRemaining}
-            </div>
-          </div>
-        )}
+        <div style={{ flex: 1, display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 8 }}>
+          {isGameActive && (
+            <>
+              <div style={{
+                fontSize: 9, letterSpacing: 2, color: T.text3, textTransform: 'uppercase', fontWeight: 700,
+              }}>
+                REDS
+              </div>
+              <div style={{
+                fontFamily: "'Rajdhani', monospace",
+                fontSize: 18, fontWeight: 900, color: inFinalSequence ? T.amber : redsRemaining === 0 ? T.amber : T.text2,
+                marginRight: 8,
+              }}>
+                {inFinalSequence ? 'FINAL' : redsRemaining}
+              </div>
+            </>
+          )}
+          <button
+            onClick={() => setIsDark(d => !d)}
+            title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+            style={{
+              background: 'none', border: `1px solid ${T.border}`,
+              borderRadius: 8, padding: '6px 8px',
+              cursor: 'pointer', color: T.text2,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              transition: 'all 0.2s ease',
+            }}
+          >
+            <Icon name={isDark ? 'sun' : 'moon'} size={16} color={T.text2} />
+          </button>
+        </div>
       </div>
 
       {/* ── MAIN CONTENT ── */}
@@ -1391,10 +1479,10 @@ const GameScreen = () => {
                   <div key={key} style={{
                     width: 8, height: 8, borderRadius: '50%',
                     background: i < nextFinalColorIdx
-                      ? 'rgba(255,255,255,0.15)'
+                      ? T.dotDone
                       : i === nextFinalColorIdx
                         ? T.amber
-                        : 'rgba(255,255,255,0.05)',
+                        : T.dotFuture,
                     boxShadow: i === nextFinalColorIdx ? `0 0 8px ${T.amber}` : 'none',
                     transition: 'all 0.3s ease',
                   }} />
@@ -1418,17 +1506,17 @@ const GameScreen = () => {
               onClick={handleMiss}
             />
             <ActionBtn
-              icon="undo"
-              label="Undo"
-              color={T.amber}
-              onClick={undoLastAction}
+              icon="swap"
+              label="Switch"
+              color={T.purple}
+              onClick={handleSwitchPlayer}
             />
           </div>
 
           {/* ── CONTROLS ── */}
           <div style={{
             display: 'flex', gap: 8, justifyContent: 'center',
-            paddingBottom: 14,
+            paddingBottom: 32,
             flexWrap: 'wrap',
           }}>
             {isPaused ? (
@@ -1437,11 +1525,83 @@ const GameScreen = () => {
               <CtrlBtn icon="pause" label="Pause"  onClick={handlePause}  color={T.amber} />
             )}
             <CtrlBtn icon="reset" label="Restart" onClick={resetGame} color={T.red} />
+            <CtrlBtn
+              icon="chevron"
+              label={showHistory ? 'Hide Log' : 'Match Log'}
+              onClick={() => setShowHistory(s => !s)}
+              color={T.cyan}
+            />
           </div>
+
+          {/* ── MATCH HISTORY ── */}
+          {showHistory && (
+            <GlassPanel style={{ padding: '14px 12px', marginBottom: 8 }}>
+              <div style={{
+                fontSize: 9, letterSpacing: 3, color: T.text3,
+                textTransform: 'uppercase', fontWeight: 700, marginBottom: 10,
+              }}>
+                Match Log
+              </div>
+              {history.length === 0 ? (
+                <div style={{ fontSize: 12, color: T.text3, textAlign: 'center', padding: '10px 0' }}>
+                  No actions yet
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4, maxHeight: 200, overflowY: 'auto' }}>
+                  {history.map((entry, idx) => {
+                    const pName = players[entry.player]?.name || `Player ${entry.player + 1}`;
+                    const label = entry.action === 'pot'
+                      ? `${pName} potted ${entry.ball} (+${entry.points})`
+                      : entry.action === 'foul'
+                        ? `${pName} FOUL (+${entry.points} opp)`
+                        : `${pName} missed`;
+                    const color = entry.action === 'pot' ? T.green : entry.action === 'foul' ? T.red : T.text3;
+                    return (
+                      <div key={idx} style={{
+                        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                        padding: '6px 8px',
+                        background: T.glass1,
+                        borderRadius: 8,
+                        border: `1px solid ${T.border}`,
+                      }}>
+                        <span style={{ fontSize: 11, color, fontWeight: 600 }}>{label}</span>
+                        <button
+                          onClick={() => setHistory(h => h.filter((_, i) => i !== idx))}
+                          style={{
+                            background: 'none', border: 'none', cursor: 'pointer',
+                            color: T.text3, padding: '2px 4px', borderRadius: 4,
+                            display: 'flex', alignItems: 'center',
+                          }}
+                        >
+                          <Icon name="close" size={12} color={T.text3} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+              {history.length > 0 && (
+                <button
+                  onClick={() => setHistory([])}
+                  style={{
+                    marginTop: 8, width: '100%',
+                    background: 'none', border: `1px solid ${T.borderRed}`,
+                    borderRadius: 8, padding: '6px',
+                    cursor: 'pointer', color: T.red,
+                    fontSize: 10, fontWeight: 700, letterSpacing: 1,
+                    textTransform: 'uppercase',
+                  }}
+                >
+                  Clear All
+                </button>
+              )}
+            </GlassPanel>
+          )}
 
         </div>
       )}
     </div>
+    </ThemeContext.Provider>
   );
 };
 
